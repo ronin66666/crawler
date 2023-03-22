@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/antchfx/htmlquery"
+	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/unicode"
@@ -22,15 +22,16 @@ func main() {
 		return
 	}
 
-	doc, err := htmlquery.Parse(bytes.NewReader(body))
+	//使用 goquery 库， 通过CSS 选择器来匹配标签中的文本
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
 	if err != nil {
-		fmt.Println("htmlquery.Parse failed ", err)
+		fmt.Println("read content failed: %v", err)
 	}
-	nodes := htmlquery.Find(doc, `/div[@class="news_li"]/h2/a[@target="_blank"]`)
-
-	for _, node := range nodes {
-		fmt.Println("fetch card ", node.FirstChild.Data)
-	}
+	doc.Find("div.news_li h2 a[target=_blank]").Each(func(i int, selection *goquery.Selection) {
+		//获取匹配标签中的文本
+		title := selection.Text()
+		fmt.Printf("Review %d: %s\n", i, title)
+	})
 }
 
 // 其获取网页的内容，检测网页的字符编码并将文本统一转换为 UTF-8 格式。
